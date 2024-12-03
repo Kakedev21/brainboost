@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import useAuthStore from '@/store/authStore';
@@ -11,7 +11,6 @@ const Register = () => {
   const [studentId, setStudentId] = useState('');
   const [gradeLevel, setGradeLevel] = useState('');
   const [section, setSection] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +28,6 @@ const Register = () => {
         studentId,
         gradeLevel,
         section,
-        username,
         password,
         role: 'student',
         email,
@@ -41,6 +39,15 @@ const Register = () => {
     }
     setLoading(false);
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#ffffff" />
+        <Text style={styles.loadingText}>Registering...</Text>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient
@@ -88,13 +95,6 @@ const Register = () => {
         />
         <TextInput
           style={styles.input}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          placeholderTextColor="#ffffff"
-        />
-        <TextInput
-          style={styles.input}
           placeholder="Password"
           value={password}
           onChangeText={setPassword}
@@ -125,6 +125,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    backgroundColor: '#833AB4',
+  },
+  loadingText: {
+    color: '#ffffff',
+    marginTop: 10,
+    fontSize: 16,
   },
   formContainer: {
     width: '90%',

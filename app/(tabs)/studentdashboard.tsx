@@ -4,6 +4,7 @@ import useAuthStore from '@/store/authStore'
 import { getStudentQuizAttempts, getStudentModuleProgress, submitQuizAttempt } from '@/controller/studentController'
 import { getQuizzes } from '@/controller/teacherQuiz'
 import { getModules } from '@/controller/teacherModule'
+import { getStudentNotifications, markNotificationAsRead } from '@/controller/notificationController'
 import { Link, useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient'
 
@@ -13,12 +14,14 @@ const StudentDashBoard = () => {
   const [moduleProgress, setModuleProgress] = useState<any[]>([])
   const [availableQuizzes, setAvailableQuizzes] = useState<any[]>([])
   const [modules, setModules] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
   const [currentQuiz, setCurrentQuiz] = useState<any>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswers, setSelectedAnswers] = useState<string[]>([])
   const [isFlipped, setIsFlipped] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showModuleModal, setShowModuleModal] = useState(false)
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false)
   const [selectedModule, setSelectedModule] = useState<any>(null)
   const flipAnimation = useRef(new Animated.Value(0)).current
 
@@ -46,8 +49,22 @@ const StudentDashBoard = () => {
 
       const moduleData = await getModules()
       setModules(moduleData)
+
+      const notificationData = await getStudentNotifications(user!.uid)
+      setNotifications(notificationData)
     } catch (error) {
       console.error('Error loading student data:', error)
+    }
+  }
+
+  const handleNotificationPress = async (notification: any) => {
+    try {
+      await markNotificationAsRead(notification.id)
+      // Refresh notifications
+      const updatedNotifications = await getStudentNotifications(user!.uid)
+      setNotifications(updatedNotifications)
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
     }
   }
 
@@ -191,6 +208,14 @@ const StudentDashBoard = () => {
         <View style={styles.header}>
           <View style={styles.profileCircle} />
           <Text style={styles.studentName}>{userData?.fullName || 'Student'}</Text>
+          <Pressable
+            style={styles.notificationButton}
+            onPress={() => setShowNotificationsModal(true)}
+          >
+            <Text style={styles.buttonText}>
+              Notifications ({notifications.filter(n => !n.isRead).length})
+            </Text>
+          </Pressable>
         </View>
 
         {currentQuiz && currentQuiz.questions ? (
@@ -367,6 +392,44 @@ const StudentDashBoard = () => {
               </View>
             </Modal>
 
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={showNotificationsModal}
+              onRequestClose={() => setShowNotificationsModal(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Notifications</Text>
+                  <ScrollView>
+                    {notifications.map((notification, index) => (
+                      <Pressable
+                        key={index}
+                        style={[
+                          styles.notificationItem,
+                          !notification.isRead && styles.unreadNotification
+                        ]}
+                        onPress={() => handleNotificationPress(notification)}
+                      >
+                        <Text style={styles.notificationText}>
+                          {notification.message}
+                        </Text>
+                        <Text style={styles.notificationDate}>
+                          {new Date(notification.createdAt.toDate()).toLocaleDateString()}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                  <Pressable
+                    style={styles.closeButton}
+                    onPress={() => setShowNotificationsModal(false)}
+                  >
+                    <Text style={styles.buttonText}>Close</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </Modal>
+
             <Pressable style={styles.logoutButton} onPress={handleLogout}>
               <Text style={styles.buttonText}>LOGOUT</Text>
             </Pressable>
@@ -397,6 +460,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
+  },
+  notificationButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    padding: 10,
+    borderRadius: 20,
+    marginTop: 10,
   },
   section: {
     marginBottom: 20,
@@ -429,6 +498,24 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
+  },
+  notificationItem: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  unreadNotification: {
+    backgroundColor: 'rgba(100, 200, 255, 0.3)',
+  },
+  notificationText: {
+    color: '#000',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  notificationDate: {
+    color: '#666',
+    fontSize: 12,
   },
   progressText: {
     color: '#000',

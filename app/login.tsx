@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import useAuthStore from '@/store/authStore';
@@ -8,6 +8,7 @@ import { Link, useRouter } from 'expo-router';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const { login, role, userData } = useAuthStore();
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function Login() {
         return;
       }
 
+      setLoading(true);
       const data = await login(username, password)
       // Navigate based on role
       if (data?.role === 'teacher') {
@@ -29,8 +31,19 @@ export default function Login() {
     } catch (error) {
       console.error('Login error:', error);
       alert('An error occurred during login');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#ffffff" />
+        <Text style={styles.loadingText}>Logging in...</Text>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient
@@ -41,7 +54,7 @@ export default function Login() {
         <Text style={styles.title}>LOGIN FORM</Text>
         <TextInput
           style={styles.input}
-          placeholder="Username"
+          placeholder="Email"
           value={username}
           onChangeText={setUsername}
           placeholderTextColor="#ffffff"
@@ -54,8 +67,14 @@ export default function Login() {
           secureTextEntry
           placeholderTextColor="#ffffff"
         />
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>LOGIN</Text>
+        <TouchableOpacity
+          style={[styles.button, loading && { backgroundColor: '#cccccc' }]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Logging in...' : 'LOGIN'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('register' as never)}>
           <Text style={styles.linkText}>Don't have an account? Register</Text>
@@ -70,6 +89,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    backgroundColor: '#833AB4',
+  },
+  loadingText: {
+    color: '#ffffff',
+    marginTop: 10,
+    fontSize: 16,
   },
   formContainer: {
     width: '90%',

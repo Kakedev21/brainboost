@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import useAuthStore from '@/store/authStore';
 import { TeacherRegisterPayloadType } from '@/store/authStore';
+import { useRouter } from 'expo-router';
 const TeacherRegister = () => {
   const [fullname, setFullname] = useState('');
   const [address, setAddress] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const { register } = useAuthStore();
+  const router = useRouter()
 
   const handleRegister = async () => {
     setLoading(true);
@@ -19,12 +20,12 @@ const TeacherRegister = () => {
       const payload: TeacherRegisterPayloadType = {
         fullName: fullname,
         address,
-        username,
         password,
         role: 'teacher',
         email
       };
       const user = await register(payload);
+      router.replace("/login")
     } catch (error) {
       console.log("error", error);
     }
@@ -56,20 +57,22 @@ const TeacherRegister = () => {
       />
       <TextInput
         style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-      />
-      <TextInput
-        style={styles.input}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>REGISTER</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && styles.disabledButton]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>REGISTER</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('login' as never)}>
@@ -113,6 +116,9 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     marginTop: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#84a4f1',
   },
   buttonText: {
     color: 'white',

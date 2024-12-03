@@ -9,6 +9,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { createContentUploadNotification } from "./notificationController";
 
 interface TeacherModule {
   id?: string;
@@ -17,6 +18,7 @@ interface TeacherModule {
   teacherId: string;
   createdAt: Date;
   updatedAt: Date;
+  teacherName?: string;
 }
 
 export const createModule = async (
@@ -30,6 +32,17 @@ export const createModule = async (
       updatedAt: new Date(),
     };
     const docRef = await addDoc(modulesRef, newModule);
+
+    // Create notification for the new module
+    const sheesh = await createContentUploadNotification(
+      moduleData.teacherId,
+      moduleData.teacherName || "", // You'll need to add teacherName to the TeacherModule interface
+      "module",
+      docRef.id
+    );
+
+    console.log("ASDASD", sheesh);
+
     return { id: docRef.id, ...newModule };
   } catch (error) {
     console.error("Error creating module:", error);

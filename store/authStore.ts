@@ -15,7 +15,6 @@ export interface RegisterPayloadType {
   studentId: string;
   gradeLevel: string;
   section: string;
-  username: string;
   password: string;
   email: string;
   role: "student" | "teacher" | null | undefined;
@@ -24,7 +23,6 @@ export interface RegisterPayloadType {
 export interface TeacherRegisterPayloadType {
   fullName: string;
   address: string;
-  username: string;
   password: string;
   email: string;
   role: "teacher" | null | undefined;

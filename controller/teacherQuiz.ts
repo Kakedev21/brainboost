@@ -9,6 +9,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import { createContentUploadNotification } from "./notificationController";
 
 interface QuizQuestion {
   question: string;
@@ -24,6 +25,7 @@ interface Quiz {
   questions: QuizQuestion[];
   createdAt: Date;
   updatedAt: Date;
+  teacherName?: string;
 }
 
 export const createQuiz = async (
@@ -37,6 +39,15 @@ export const createQuiz = async (
       updatedAt: new Date(),
     };
     const docRef = await addDoc(quizRef, newQuiz);
+
+    // Create notification for the new quiz
+    await createContentUploadNotification(
+      quizData.teacherId,
+      quizData.teacherName || "",
+      "quiz",
+      docRef.id
+    );
+
     return { id: docRef.id, ...newQuiz };
   } catch (error) {
     console.error("Error creating quiz:", error);
