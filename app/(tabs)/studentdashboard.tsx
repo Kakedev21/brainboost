@@ -25,7 +25,6 @@ const StudentDashBoard = () => {
   const [selectedModule, setSelectedModule] = useState<any>(null)
   const flipAnimation = useRef(new Animated.Value(0)).current
 
-  console.log(user!.uid)
 
   const router = useRouter()
 
@@ -180,8 +179,14 @@ const StudentDashBoard = () => {
   }
 
   const handleLogout = async () => {
-    await logout()
-    router.replace("/login")
+    try {
+      // First navigate to login
+      router.replace("/login")
+      // Then perform logout
+      await logout()
+    } catch (error) {
+      console.error('Error during logout:', error)
+    }
   }
 
   const flipCardContainer: ViewStyle = {
